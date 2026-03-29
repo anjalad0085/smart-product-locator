@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Smart Product Locator</title>
+
+    <!-- Bootstrap CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-5">
+
+    <h1 class="text-center mb-4">🛒 Smart Product Locator</h1>
+
+    <!-- Search Bar -->
+    <form method="GET" action="{% url 'search_product' %}" class="d-flex mb-4">
+    <input id="searchInput" class="form-control me-2" type="text" name="q"
+           placeholder="Search product..." value="{{ query }}">
+
+    <button class="btn btn-primary me-2" type="submit">Search</button>
+
+    <!-- Mic Button -->
+    <button type="button" class="btn btn-outline-secondary" onclick="startVoice()">
+        🎤
+    </button>
+</form>
+
+<!-- Listening Indicator -->
+<p id="listeningText" style="display:none; color: green;">
+    🎤 Listening...
+</p>
+
+    <!-- Results -->
+    {% if products %}
+        <h3 class="mb-3">Results</h3>
+
+        {% for item in products %}
+            <div class="card mb-3 shadow-sm">
+                <div class="card-body">
+
+                    <h5 class="card-title">
+                        {{ item.name }} ({{ item.brand.name }})
+                    </h5>
+
+                    <p class="card-text">
+                        📍 Aisle {{ item.aisle }} → Rack {{ item.rack }}
+                    </p>
+
+                    {% if item.stock_quantity > 0 %}
+                        <span class="badge bg-success">
+                            In Stock: {{ item.stock_quantity }}
+                        </span>
+                    {% else %}
+                        <span class="badge bg-danger">
+                            Out of Stock
+                        </span>
+                    {% endif %}
+
+                </div>
+            </div>
+        {% endfor %}
+
+    {% elif query %}
+        <div class="alert alert-danger">
+            ❌ Product not found
+        </div>
+
+        {% if alternatives %}
+            <h5>Try these alternatives:</h5>
+
+            <ul class="list-group">
+                {% for item in alternatives %}
+                    <li class="list-group-item">
+                        {{ item.name }} ({{ item.brand.name }})
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endif %}
+    {% if recommendations %}
+    <h4 class="mt-4">🔁 Recommended Alternatives</h4>
+
+    {% for item in recommendations %}
+        <div class="card mb-2 border-warning">
+            <div class="card-body">
+
+                <strong>{{ item.name }} ({{ item.brand.name }})</strong><br>
+
+                📍 Aisle {{ item.aisle }} → Rack {{ item.rack }}<br>
+
+                {% if item.stock_quantity > 0 %}
+                    <span class="badge bg-success">
+                        In Stock: {{ item.stock_quantity }}
+                    </span>
+                {% else %}
+                    <span class="badge bg-danger">
+                        Out of Stock
+                    </span>
+                {% endif %}
+
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
+
+</div>
+<script>
+function startVoice() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+        alert("Speech Recognition not supported in this browser");
+        return;
+    }
+
+    const recognition = new SpeechRecognition();
+
+    recognition.lang = 'en-US';
+    recognition.start();
+
+    document.getElementById("listeningText").style.display = "block";
+
+    recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+
+        document.getElementById("searchInput").value = transcript;
+        document.getElementById("listeningText").style.display = "none";
+
+        document.querySelector("form").submit();
+    };
+
+    recognition.onerror = function() {
+        alert("Voice recognition failed. Try again.");
+        document.getElementById("listeningText").style.display = "none";
+    };
+}
+
+
+// 🔁 Kiosk Auto Reset
+let timer;
+
+function resetScreen() {
+    window.location.href = "/";
+}
+
+function resetTimer() {
+    clearTimeout(timer);
+    timer = setTimeout(resetScreen, 30000); // 30 sec
+}
+
+// ✅ Proper event binding
+window.onload = function () {
+    resetTimer();
+
+    document.onmousemove = resetTimer;
+    document.onkeypress = resetTimer;
+    document.onclick = resetTimer;
+};
+</script>
+
+</body>
+</html>
