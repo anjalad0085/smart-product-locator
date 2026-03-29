@@ -46,12 +46,6 @@ A smart supermarket kiosk system that helps customers quickly locate products us
 
 ---
 
-## 📸 Screenshots
-
-*(Add screenshots here later)*
-
----
-
 ## ⚙️ Installation
 
 ```bash
